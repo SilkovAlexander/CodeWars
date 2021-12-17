@@ -39,36 +39,62 @@
 // Note:
 // Keep an eye on performance.
 
-fn j(n: i32) -> i32 {
-    println!("j: {}", n);
-    match n {
-        0 => 0,
-        n => n - a(j(n - 1))
+struct a {
+    vals: Vec<i32>
+}
+
+impl a {
+    fn get(&mut self, n: i32, jj: &mut j) -> i32{
+        if n < self.vals.len() as i32 {
+            return self.vals[n as usize];
+        }
+        let val = match n {
+            0 => 1,
+            n => {
+                let ind = self.get(n - 1, jj);
+                n - jj.get(ind, self)
+            }
+        };
+        self.vals.push(val);
+        val
     }
 }
 
-fn a(n: i32) -> i32 {
-    println!("a: {}", n);
-    match n {
-        0 => 1,
-        n => n - j(a(n - 1))
+struct j {
+    vals: Vec<i32>
+}
+
+impl j {
+    fn get(&mut self, n: i32, aa: &mut a) -> i32{
+        if n < self.vals.len() as i32 {
+            return self.vals[n as usize];
+        }
+        let val = match n {
+            0 => 1,
+            n => {
+                let ind = self.get(n - 1, aa);
+                n - aa.get(ind, self)
+            }
+        };
+        self.vals.push(val);
+        val
     }
 }
+
 
 fn john(n: i32) -> Vec<i32> {
-    let mut res: Vec<i32> = vec![];
-    for i in 0..n {
-        res.push(j(i))
-    }
-    res
+    let mut aa = a { vals: [1].to_vec() };
+    let mut jj = j { vals: [0].to_vec() };
+    jj.get(n-1, &mut aa);
+    jj.vals
+
 }
 
 fn ann(n: i32) -> Vec<i32> {
-    let mut res: Vec<i32> = vec![];
-    for i in 0..n {
-        res.push(a(i))
-    }
-    res
+    let mut aa = a { vals: [1].to_vec() };
+    let mut jj = j { vals: [0].to_vec() };
+    aa.get(n-1, &mut jj);
+    aa.vals
 }
 
 fn sum_john(n: i32) -> i32 {
@@ -91,8 +117,8 @@ fn sum_ann(n: i32) -> i32 {
 
 
 fn main() {
-    println!("{:?}", john(20));
-    // println!("{:?}", ann(6));
+    println!("{:?}", john(11));
+    println!("{:?}", ann(6));
 }
 
 #[cfg(test)]
