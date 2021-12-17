@@ -39,20 +39,6 @@
 // Note:
 // Keep an eye on performance.
 
-struct a {
-    vals: Vec<i32>
-}
-
-impl a {
-    fn get(n: i32) {
-        if n < vals.s
-    }
-}
-
-struct j {
-    vals: Vec<i32>
-}
-
 fn j(n: i32) -> i32 {
     println!("j: {}", n);
     match n {
@@ -105,7 +91,7 @@ fn sum_ann(n: i32) -> i32 {
 
 
 fn main() {
-    println!("{:?}", john(100));
+    println!("{:?}", john(20));
     // println!("{:?}", ann(6));
 }
 
