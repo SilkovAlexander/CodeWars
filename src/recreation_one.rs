@@ -95,6 +95,18 @@ fn list_squared(m: u64, n: u64) -> Vec<(u64, u64)> {
     result
 }
 
+// fn list_squared(m: u64, n: u64) -> Vec<(u64, u64)> {
+//     (m..=n).map(|i| {
+//         (i,
+//          (1..=(i as f32).sqrt() as u64).filter_map(|d| {
+//              let q = i / d;
+//              if q*d == i { Some(d*d + if q == d {0} else {q*q}) } else { None }
+//          }).sum())
+//     }).filter(|t| {
+//         (t.1 as f64).sqrt().fract() == 0.0
+//     }).collect::<Vec<_>>()
+// }
+
 fn main() {
     println!("{:?}", list_squared(300, 600));
 }
