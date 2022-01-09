@@ -1,26 +1,63 @@
-// Write a function that accepts an array of 10 integers (between 0 and 9), that returns a string of those numbers in the form of a phone number.
+// The Fibonacci numbers are the numbers in the following integer sequence (Fn):
 //
-// Example
-// create_phone_number(&[1,2,3,4,5,6,7,8,9,0]); // returns "(123) 456-7890"
-// The returned format must be correct in order to complete this challenge.
-// Don't forget the space after the closing parentheses!
+// 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, ...
+//
+// such as
+//
+// F(n) = F(n-1) + F(n-2) with F(0) = 0 and F(1) = 1.
+//
+// Given a number, say prod (for product), we search two Fibonacci numbers F(n) and F(n+1) verifying
+//
+// F(n) * F(n+1) = prod.
+//
+// Your function productFib takes an integer (prod) and returns an array:
+//
+// [F(n), F(n+1), true] or {F(n), F(n+1), 1} or (F(n), F(n+1), True)
+// depending on the language if F(n) * F(n+1) = prod.
+//
+// If you don't find two consecutive F(n) verifying F(n) * F(n+1) = prodyou will return
+//
+// [F(n), F(n+1), false] or {F(n), F(n+1), 0} or (F(n), F(n+1), False)
+// F(n) being the smallest one such as F(n) * F(n+1) > prod.
+//
+// Some Examples of Return:
+// (depend on the language)
+//
+// productFib(714) # should return (21, 34, true),
+// # since F(8) = 21, F(9) = 34 and 714 = 21 * 34
+//
+// productFib(800) # should return (34, 55, false),
+// # since F(8) = 21, F(9) = 34, F(10) = 55 and 21 * 34 < 800 < 34 * 55
+// -----
+// productFib(714) # should return [21, 34, true],
+// productFib(800) # should return [34, 55, false],
+// -----
+// productFib(714) # should return {21, 34, 1},
+// productFib(800) # should return {34, 55, 0},
+// -----
+// productFib(714) # should return {21, 34, true},
+// productFib(800) # should return {34, 55, false},
+// Note:
+// You can see examples for your language in "Sample Tests".
 
 
-fn create_phone_number(numbers: &[u8]) -> String {
-    let joiner = |n:&[u8]| {
-        n.iter().map(|d| format!("{}",d)).collect::<Vec<String>>().join("")
-    };
-    format!("({}) {}-{}", joiner(&numbers[0..=2]), joiner(&numbers[3..=5]), joiner(&numbers[6..=9]))
+fn product_fib(prod: u64) -> (u64, u64, bool) {
+    // your code
+
+    (0, 0, false)
 }
 
-
 fn main() {
-    println!("{:?}", create_phone_number(&[1, 2, 3, 4, 5, 6, 7, 8, 9, 0]));
+    println!("{:?}", product_fib(4895));
+    println!("{:?}", product_fib(5895));
+}
+
+fn dotest(prod: u64, exp: (u64, u64, bool)) -> () {
+    assert_eq!(product_fib(prod), exp)
 }
 
 #[test]
-fn returns_expected() {
-    assert_eq!(create_phone_number(&[1, 2, 3, 4, 5, 6, 7, 8, 9, 0]), "(123) 456-7890");
-    assert_eq!(create_phone_number(&[1, 1, 1, 1, 1, 1, 1, 1, 1, 1]), "(111) 111-1111");
-    assert_eq!(create_phone_number(&[1, 2, 3, 4, 5, 6, 7, 8, 9, 9]), "(123) 456-7899");
+fn basics_product_fib() {
+    dotest(4895, (55, 89, true));
+    dotest(5895, (89, 144, false));
 }

@@ -13,7 +13,8 @@ fn digital_root(n: i64) -> i64 {
     if n < 10 {
         return n;
     }
-    digital_root(n.to_string()
+    digital_root(
+        n.to_string()
         .chars()
         .into_iter()
         .map(|c| i64::from_str_radix(&c.to_string(), 10).unwrap_or(0))
