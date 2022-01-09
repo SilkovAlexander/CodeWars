@@ -41,15 +41,65 @@
 // You can see examples for your language in "Sample Tests".
 
 
-fn product_fib(prod: u64) -> (u64, u64, bool) {
-    // your code
+fn fib(n: u64) -> u64 {
+    match n {
+        0 => 0,
+        1 => 1,
+        _ => fib(n - 1) + fib(n - 2)
+    }
+}
 
-    (0, 0, false)
+struct Fib {
+    vals: Vec<u64>,
+}
+
+impl Fib {
+    fn get(&mut self, n: u64) -> u64 {
+        let n = n as usize;
+        let l = self.vals.len();
+        if n >= l {
+            for i in l..=n {
+                self.vals.push(fib(i as u64))
+            }
+        }
+        self.vals[n]
+    }
+}
+
+fn product_fib(prod: u64) -> (u64, u64, bool) {
+    let mut fibbonizer = Fib { vals: vec![] };
+    let root = (prod as f64).sqrt() as u64;
+    let mut it = 0;
+    loop {
+        if fibbonizer.get(it) > root {
+            break;
+        }
+        it += 1;
+    }
+    let cur_f = fibbonizer.get(it);
+    let prev_f = fibbonizer.get(it - 1);
+    if cur_f * prev_f == prod {
+        (prev_f, cur_f, true)
+    } else if cur_f * prev_f < prod {
+        (cur_f, fibbonizer.get(it + 1), false)
+    } else {
+        (prev_f, cur_f, false)
+    }
 }
 
 fn main() {
-    println!("{:?}", product_fib(4895));
-    println!("{:?}", product_fib(5895));
+    // let mut prev = 1;
+    // for i in 0..30 {
+    //     let f = fib(i);
+    //     println!("{} {}", f, if prev != 0 {f as f64 / prev as f64} else {0.0} );
+    //     prev = f;
+    // }
+    // println!();
+    // println!("{:?}", product_fib(4895));
+    // println!("{:?}", product_fib(5895));
+    for i in 1..100 {
+        product_fib(100000000000 * i);
+    }
 }
 
 fn dotest(prod: u64, exp: (u64, u64, bool)) -> () {
