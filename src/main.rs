@@ -1,34 +1,147 @@
-// Your goal in this kata is to implement a difference function, which subtracts one list from another and returns the result.
+// Given an n x n array, return the array elements arranged from outermost elements to the middle element, traveling clockwise.
 //
-// It should remove all values from list a, which are present in list b keeping their order.
+// array = [[1,2,3],
+// [4,5,6],
+// [7,8,9]]
+// snail(array) #=> [1,2,3,6,9,8,7,4,5]
+// For better understanding, please follow the numbers of the next array consecutively:
 //
-// array_diff(vec![1,2], vec![1]) == vec![2]
-// If a value is present in b, all of its occurrences must be removed from the other:
+// array = [[1,2,3],
+// [8,9,4],
+// [7,6,5]]
+// snail(array) #=> [1,2,3,4,5,6,7,8,9]
+// This image will illustrate things more clearly:
 //
-// array_diff(vec![1,2,2,2,3], vec![2]) == vec![1,3]
+//
+// NOTE: The idea is not sort the elements from the lowest value to the highest; the idea is to traverse the 2-d array in a clockwise snailshell pattern.
+//
+// NOTE 2: The 0x0 (empty matrix) is represented as en empty array inside an array [[]].
 
 
 fn main() {
-    println!("{:?}", array_diff(vec![1,2,2], vec![2]));
+    let square = &[
+        vec![1,2,3],
+        vec![8,9,4],
+        vec![7,6,5],
+    ];
+    println!("{:?}", snail(square));
 }
 
-fn array_diff<T: PartialEq>(a: Vec<T>, b: Vec<T>) -> Vec<T> {
-    a.into_iter().filter(|el| !b.contains(el)).collect::<Vec<T>>()
-}
+// snail n * n
+// n  n-1     n-1  n-2   n-2   n-3
 
-// Add your tests here
-// See https://doc.rust-lang.org/stable/rust-by-example/testing/unit_testing.html
+fn snail(matrix: &[Vec<i32>]) -> Vec<i32> {
+    let n = matrix.len();
+    if n <= 1 {
+        return matrix[0].clone();
+    }
+    let mut res = vec![];
+    let mut start = (0, 0);
+    // 3 - 1,1
+    // 5 - 2,2
+    // 2 - 1,0
+    // 4 - 2,1
+    // 6 - 3,2
+
+    let center = match n % 2 {
+        1 => ((n - 1) / 2, (n - 1) / 2),
+        _ => (n / 2, n / 2 - 1)
+    };
+
+    let mut dir = 0;
+    for angle in (1..n).rev() {
+        for i in 0..(angle) {
+            println!("{:?}", start);
+            res.push(matrix[start.0][start.1]);
+            match dir == 0 {
+                true => start.1 += 1,
+                false => start.1 -= 1
+            };
+        }
+        println!("{:?}", start);
+        res.push(matrix[start.0][start.1]);
+        match dir == 0 {
+            true => start.0 += 1,
+            false => start.0 -= 1
+        };
+        for i in 0..angle-1 {
+            println!("{:?}", start);
+            res.push(matrix[start.0][start.1]);
+            match dir == 0 {
+                true => start.0 += 1,
+                false => start.0 -= 1
+            };
+        }
+        println!("{:?}", start);
+        res.push(matrix[start.0][start.1]);
+        dir = (dir + 1) % 2;
+    }
+
+    res.push(matrix[center.0][center.1]);
+    res
+
+    // for i in (2..=n).rev() {
+    //     for j in 0..i-1 {
+    //         match dir {
+    //             0 => start.1 += 1,
+    //             _ => start.1 -= 1
+    //         }
+    //         println!("{:?}", start);
+    //         res.push(matrix[start.0][start.1]);
+    //     }
+    //     for j in 0..i-1 {
+    //         match dir {
+    //             0 => start.0 += 1,
+    //             _ => start.0 -= 1
+    //         }
+    //         println!("{:?}", start);
+    //         res.push(matrix[start.0][start.1]);
+    //     }
+    //     dir = (dir + 1) % 2;
+    // }
+    // res.push(matrix[1][1]);
+    // res
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
-    fn returns_expected() {
-        assert_eq!(array_diff(vec![1,2], vec![1]), vec![2]);
-        assert_eq!(array_diff(vec![1,2,2], vec![1]), vec![2,2]);
-        assert_eq!(array_diff(vec![1,2,2], vec![2]), vec![1]);
-        assert_eq!(array_diff(vec![1,2,2], vec![]), vec![1,2,2]);
-        assert_eq!(array_diff(vec![], vec![1,2]), vec![]);
-        assert_eq!(array_diff(vec![1,2,3], vec![1,2]), vec![3]);
+    fn sample_test1() {
+        let square = &[
+            vec![1,2,3],
+            vec![4,5,6],
+            vec![7,8,9],
+        ];
+        let expected = vec![1,2,3,6,9,8,7,4,5];
+        assert_eq!(snail(square), expected);
+    }
+
+    #[test]
+    fn sample_test2() {
+        let square = &[
+            vec![1,2,3],
+            vec![8,9,4],
+            vec![7,6,5],
+        ];
+        let expected = vec![1,2,3,4,5,6,7,8,9];
+        assert_eq!(snail(square), expected);
+    }
+
+    #[test]
+    fn sample_test3() {
+        let square: &[Vec<i32>; 1] = &[Vec::new()];
+        let expected = Vec::new();
+        assert_eq!(snail(square), expected, "Failed with empty input");
+    }
+
+    #[test]
+    fn sample_test4() {
+        let square = &[vec![1]];
+        let expected = vec![1];
+        assert_eq!(snail(square), expected);
     }
 }
+
+
