@@ -77,6 +77,7 @@ fn snail(matrix: &[Vec<i32>]) -> Vec<i32> {
         dir = (dir + 1) % 2;
     }
 
+    println!("{:?}", center);
     res.push(matrix[center.0][center.1]);
     res
 
