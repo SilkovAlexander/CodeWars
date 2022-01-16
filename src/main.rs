@@ -1,148 +1,74 @@
-// Given an n x n array, return the array elements arranged from outermost elements to the middle element, traveling clockwise.
+// Your task in order to complete this Kata is to write a function which formats a duration, given as a number of seconds, in a human-friendly way.
 //
-// array = [[1,2,3],
-// [4,5,6],
-// [7,8,9]]
-// snail(array) #=> [1,2,3,6,9,8,7,4,5]
-// For better understanding, please follow the numbers of the next array consecutively:
+// The function must accept a non-negative integer. If it is zero, it just returns "now". Otherwise, the duration is expressed as a combination of years, days, hours, minutes and seconds.
 //
-// array = [[1,2,3],
-// [8,9,4],
-// [7,6,5]]
-// snail(array) #=> [1,2,3,4,5,6,7,8,9]
-// This image will illustrate things more clearly:
+// It is much easier to understand with an example:
 //
+// format_duration(62)    // returns "1 minute and 2 seconds"
+// format_duration(3662)  // returns "1 hour, 1 minute and 2 seconds"
+// For the purpose of this Kata, a year is 365 days and a day is 24 hours.
 //
-// NOTE: The idea is not sort the elements from the lowest value to the highest; the idea is to traverse the 2-d array in a clockwise snailshell pattern.
+// Note that spaces are important.
 //
-// NOTE 2: The 0x0 (empty matrix) is represented as en empty array inside an array [[]].
+// Detailed rules
+// The resulting expression is made of components like 4 seconds, 1 year, etc. In general, a positive integer and one of the valid units of time, separated by a space. The unit of time is used in plural if the integer is greater than 1.
+//
+// The components are separated by a comma and a space (", "). Except the last component, which is separated by " and ", just like it would be written in English.
+//
+// A more significant units of time will occur before than a least significant one. Therefore, 1 second and 1 year is not correct, but 1 year and 1 second is.
+//
+// Different components have different unit of times. So there is not repeated units like in 5 seconds and 1 second.
+//
+// A component will not appear at all if its value happens to be zero. Hence, 1 minute and 0 seconds is not valid, but it should be just 1 minute.
+//
+// A unit of time must be used "as much as possible". It means that the function should not return 61 seconds, but 1 minute and 1 second instead. Formally, the duration specified by of a component must not be greater than any valid more significant unit of time.
 
 
 fn main() {
-    let square = &[
-        vec![1,2,3],
-        vec![8,9,4],
-        vec![7,6,5],
-    ];
-    println!("{:?}", snail(square));
+    println!("{:?}", format_duration(3601));
 }
 
-// snail n * n
-// n  n-1     n-1  n-2   n-2   n-3
 
-fn snail(matrix: &[Vec<i32>]) -> Vec<i32> {
-    let n = matrix.len();
-    if n <= 1 {
-        return matrix[0].clone();
-    }
-    let mut res = vec![];
-    let mut start = (0, 0);
-    // 3 - 1,1
-    // 5 - 2,2
-    // 2 - 1,0
-    // 4 - 2,1
-    // 6 - 3,2
+fn format_duration(seconds: u64) -> String {
+    let sec = seconds % 60;
+    let minutes = (seconds / 60) % 60;
+    let hours = (seconds / 3600) % 24;
+    let days = (seconds / (3600 * 24)) % 365;
+    let years = (seconds / (3600 * 24 * 365));
+    let mut cnt = 0;
+    cnt = (cnt << 1) + (years != 0) as u32;
 
-    let center = match n % 2 {
-        1 => ((n - 1) / 2, (n - 1) / 2),
-        _ => (n / 2, n / 2 - 1)
+    cnt = (cnt << 1) + (days != 0) as u32;
+    cnt = (cnt << 1) + (hours != 0) as u32;
+    cnt = (cnt << 1) + (minutes != 0) as u32;
+    cnt = (cnt << 1) + (sec != 0) as u32;
+
+    match cnt.count_ones() {
+        0 => return "now".to_string(),
+        1 => {
+            match cnr {
+                
+            }
+        }
     };
 
-    let mut dir = 0;
-    for angle in (1..n).rev() {
-        for i in 0..(angle) {
-            println!("{:?}", start);
-            res.push(matrix[start.0][start.1]);
-            match dir == 0 {
-                true => start.1 += 1,
-                false => start.1 -= 1
-            };
-        }
-        println!("{:?}", start);
-        res.push(matrix[start.0][start.1]);
-        match dir == 0 {
-            true => start.0 += 1,
-            false => start.0 -= 1
-        };
-        for i in 0..angle-1 {
-            println!("{:?}", start);
-            res.push(matrix[start.0][start.1]);
-            match dir == 0 {
-                true => start.0 += 1,
-                false => start.0 -= 1
-            };
-        }
-        println!("{:?}", start);
-        res.push(matrix[start.0][start.1]);
-        dir = (dir + 1) % 2;
-    }
 
-    println!("{:?}", center);
-    res.push(matrix[center.0][center.1]);
-    res
-
-    // for i in (2..=n).rev() {
-    //     for j in 0..i-1 {
-    //         match dir {
-    //             0 => start.1 += 1,
-    //             _ => start.1 -= 1
-    //         }
-    //         println!("{:?}", start);
-    //         res.push(matrix[start.0][start.1]);
-    //     }
-    //     for j in 0..i-1 {
-    //         match dir {
-    //             0 => start.0 += 1,
-    //             _ => start.0 -= 1
-    //         }
-    //         println!("{:?}", start);
-    //         res.push(matrix[start.0][start.1]);
-    //     }
-    //     dir = (dir + 1) % 2;
-    // }
-    // res.push(matrix[1][1]);
-    // res
+    "".to_string()
 }
+
+// Add your tests here.
+// See https://doc.rust-lang.org/stable/rust-by-example/testing/unit_testing.html
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn sample_test1() {
-        let square = &[
-            vec![1,2,3],
-            vec![4,5,6],
-            vec![7,8,9],
-        ];
-        let expected = vec![1,2,3,6,9,8,7,4,5];
-        assert_eq!(snail(square), expected);
-    }
-
-    #[test]
-    fn sample_test2() {
-        let square = &[
-            vec![1,2,3],
-            vec![8,9,4],
-            vec![7,6,5],
-        ];
-        let expected = vec![1,2,3,4,5,6,7,8,9];
-        assert_eq!(snail(square), expected);
-    }
-
-    #[test]
-    fn sample_test3() {
-        let square: &[Vec<i32>; 1] = &[Vec::new()];
-        let expected = Vec::new();
-        assert_eq!(snail(square), expected, "Failed with empty input");
-    }
-
-    #[test]
-    fn sample_test4() {
-        let square = &[vec![1]];
-        let expected = vec![1];
-        assert_eq!(snail(square), expected);
+    fn test_basic() {
+        assert_eq!(format_duration(1), "1 second");
+        assert_eq!(format_duration(62), "1 minute and 2 seconds");
+        assert_eq!(format_duration(120), "2 minutes");
+        assert_eq!(format_duration(3600), "1 hour");
+        assert_eq!(format_duration(3662), "1 hour, 1 minute and 2 seconds");
     }
 }
-
-
