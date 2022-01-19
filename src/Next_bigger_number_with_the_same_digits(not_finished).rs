@@ -56,13 +56,10 @@ fn next_bigger_number(n: i64) -> i64 {
     for i in 2..=digits.len() {
         let (high, low) = digits.split_at(digits.len() - i);
         let mut low = low.to_vec();
-        let init = low.clone();
+
         low.sort(); // ??? get rid of?
         let permutations = get_permutations(low.clone());
-        let index = permutations.binary_search(&init).unwrap();
-        let (_, permutations) = permutations.split_at(index);
-        let permutations = permutations.to_vec();
-        // println!("{:?} {:?}", init, permutations);
+        // println!("{:?} {:?}", low, permutations);
         for mut p in permutations {
             let mut tmp = high.clone().to_vec();
             tmp.append(&mut p);
@@ -89,11 +86,11 @@ fn main() {
     // println!("{} {:?}", per.len(), per);
     // let per = get_permutations(vec![1, 2, 3, 4, 5]);
     // println!("{} {:?}", per.len(), per);
-    // println!("{:?}", next_bigger_number(1234567890));
+    println!("{:?}", next_bigger_number(1234567890));
     // println!("{:?}", next_bigger_number(123456789685477580));
-    for i in 1..1000000 {
-        let _ = next_bigger_number(i);
-    }
+    // for i in 1..1000000 {
+    //     let _ = next_bigger_number(i);
+    // }
 }
 
 #[cfg(test)]
