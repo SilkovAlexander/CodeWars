@@ -22,6 +22,11 @@ fn get_permutations(digits: Vec<i64>) -> Vec<Vec<i64>> {
     if digits.len() <= 1 {
         return vec![digits];
     }
+    let mut desc_dig = digits.clone();
+    desc_dig.sort_by(|a, c| c.cmp(a));
+    if desc_dig == digits {
+        return vec![digits];
+    }
     let mut res = vec![];
     for i in 0..digits.len() {
         if digits[0] > digits[i] {
@@ -35,7 +40,7 @@ fn get_permutations(digits: Vec<i64>) -> Vec<Vec<i64>> {
             res.push(v.clone());
         }
     }
-    res.dedup();
+    // res.dedup();
     res
 }
 
@@ -53,13 +58,20 @@ fn next_bigger_number(n: i64) -> i64 {
         .into_iter()
         .map(|c| i64::from_str_radix(&c.to_string(), 10).unwrap())
         .collect::<Vec<i64>>();
+    // 12345
+    //    54
+    // не надо склеивать а толька искать больший суффикс
+
     for i in 2..=digits.len() {
         let (high, low) = digits.split_at(digits.len() - i);
         let mut low = low.to_vec();
-
+        let init = low.clone();
         low.sort(); // ??? get rid of?
         let permutations = get_permutations(low.clone());
-        // println!("{:?} {:?}", low, permutations);
+        let index = permutations.binary_search(&init).unwrap();
+        let (_, permutations) = permutations.split_at(index+1);
+        let permutations = permutations.to_vec();
+        println!("{:?} {:?}", init, permutations);
         for mut p in permutations {
             let mut tmp = high.clone().to_vec();
             tmp.append(&mut p);
@@ -86,8 +98,10 @@ fn main() {
     // println!("{} {:?}", per.len(), per);
     // let per = get_permutations(vec![1, 2, 3, 4, 5]);
     // println!("{} {:?}", per.len(), per);
-    println!("{:?}", next_bigger_number(1234567890));
-    // println!("{:?}", next_bigger_number(123456789685477580));
+    // println!("{:?}", next_bigger_number(1234567890));
+    // println!("{:?}", next_bigger_number(988877776665544321));
+    // println!("{:?}", next_bigger_number(7665544321));
+    println!("{:?}", next_bigger_number(12345));
     // for i in 1..1000000 {
     //     let _ = next_bigger_number(i);
     // }

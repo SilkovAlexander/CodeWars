@@ -15,26 +15,30 @@
 // nextBigger(num: 111) // returns nil
 // nextBigger(num: 531) // returns nil
 
+/*
+go from right search for dig less then next find next greater to right and sort all rights
+1236549894
+       8 94   -> 9 48
+ */
+
 // digits should be sorted to get sorted output
-fn get_permutations(digits: Vec<i64>) -> Vec<Vec<i64>> {
+fn get_permutations(digits: Vec<i64>, first: bool) -> Vec<Vec<i64>> {
     // let mut digits = digits;
     // digits.sort();
-    if digits.len() <= 1 {
-        return vec![digits];
-    }
-    let mut desc_dig = digits.clone();
-    desc_dig.sort_by(|a, c| c.cmp(a));
-    if desc_dig == digits {
+    if !first && digits.len() <= 1 {
         return vec![digits];
     }
     let mut res = vec![];
     for i in 0..digits.len() {
-        if digits[0] > digits[i] {
+        if first && (digits[0] > digits[i]) {
             continue;
         }
         let mut trimmed = digits.clone();
         trimmed.remove(i);
-        let tmp = get_permutations(trimmed);
+        if first {
+            trimmed.sort();
+        }
+        let tmp = get_permutations(trimmed, false);
         for mut v in tmp {
             v.insert(0, digits[i]);
             res.push(v.clone());
@@ -52,33 +56,22 @@ fn vec_to_num(digits: Vec<i64>) -> i64 {
 }
 
 fn next_bigger_number(n: i64) -> i64 {
-    // eprintln!("{}", n);
     let digits = n.to_string()
         .chars()
         .into_iter()
         .map(|c| i64::from_str_radix(&c.to_string(), 10).unwrap())
         .collect::<Vec<i64>>();
-    // 12345
-    //    54
-    // не надо склеивать а толька искать больший суффикс
 
     for i in 2..=digits.len() {
         let (high, low) = digits.split_at(digits.len() - i);
         let mut low = low.to_vec();
-        let init = low.clone();
-        low.sort(); // ??? get rid of?
-        let permutations = get_permutations(low.clone());
-        let index = permutations.binary_search(&init).unwrap();
-        let (_, permutations) = permutations.split_at(index+1);
-        let permutations = permutations.to_vec();
-        println!("{:?} {:?}", init, permutations);
-        for mut p in permutations {
+        let mut permutations = get_permutations(low.clone(), true);
+        println!("{:?} {:?}", low, permutations);
+        if !permutations.is_empty() {
             let mut tmp = high.clone().to_vec();
-            tmp.append(&mut p);
+            tmp.append(&mut permutations[0]);
             let num = vec_to_num(tmp);
-            if num > n {
-                return num;
-            }
+            return num;
         }
     }
     return -1;
@@ -92,16 +85,20 @@ fn main() {
     // b.sort();
     // low.append(&mut b);
     // println!("{:?}", low);
-    // let per = get_permutations(vec![1, 2, 3, 4, 4]);
+    // let per = get_permutations(vec![1, 2, 3, 4, 4], true);
     // println!("{} {:?}", per.len(), per);
-    // let per = get_permutations(vec![3, 1, 2, 4, 4]);
+    // let per = get_permutations(vec![3, 1, 2, 4, 4], true);
     // println!("{} {:?}", per.len(), per);
-    // let per = get_permutations(vec![1, 2, 3, 4, 5]);
+    // let per = get_permutations(vec![1, 2, 3, 4, 5], true);
     // println!("{} {:?}", per.len(), per);
+    let per = get_permutations(vec![8, 9, 0], true);
+    println!("{} {:?}", per.len(), per);
+    let per = get_permutations(vec![7, 8, 9], true);
+    println!("{} {:?}", per.len(), per);
     // println!("{:?}", next_bigger_number(1234567890));
     // println!("{:?}", next_bigger_number(988877776665544321));
     // println!("{:?}", next_bigger_number(7665544321));
-    println!("{:?}", next_bigger_number(12345));
+    // println!("{:?}", next_bigger_number(12345));
     // for i in 1..1000000 {
     //     let _ = next_bigger_number(i);
     // }
