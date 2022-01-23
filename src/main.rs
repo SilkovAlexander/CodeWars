@@ -1,84 +1,133 @@
-// Given an array of positive or negative integers
+// Create two functions to encode and then decode a string using the Rail Fence Cipher. This cipher
+// is used to encode a string by placing each character successively in a diagonal along a set of
+// "rails". First start off moving diagonally and down. When you reach the bottom, reverse direction
+// and move diagonally and up until you reach the top rail. Continue until you reach the end of the
+// string. Each "rail" is then read left to right to derive the encoded string.
 //
-// I= [i1,..,in]
+// For example, the string "WEAREDISCOVEREDFLEEATONCE" could be represented in a three rail system
+// as follows:
 //
-// you have to produce a sorted array P of the form
+// W       E       C       R       L       T       E  7
+//   E   R   D   S   O   E   E   F   E   A   O   C    12
+//     A       I       V       D       E       N      6
+// The encoded string would be:
 //
-// [ [p, sum of all ij of I for which p is a prime factor (p positive) of ij] ...]
+// WECRLTEERDSOEEFEAOCAIVDEN
 //
-// P will be sorted by increasing order of the prime numbers. The final result has to be given as a
-// string in Java, C#, C, C++ and as an array of arrays in other languages.
+// Write a function/method that takes 2 arguments, a string and the number of rails, and returns the
+// ENCODED string.
 //
-// Example:
-// I = [12, 15] # result = [(2, 12), (3, 27), (5, 15)]
-// [2, 3, 5] is the list of all prime factors of the elements of I, hence the result.
+// Write a second function/method that takes 2 arguments, an encoded string and the number of rails,
+// and returns the DECODED string.
 //
-// Notes:
+// For both encoding and decoding, assume number of rails >= 2 and that passing an empty string will
+// return an empty string.
 //
-// It can happen that a sum is 0 if some numbers are negative!
-// Example: I = [15, 30, -45] 5 divides 15, 30 and (-45) so 5 appears in the result, the sum of the
-// numbers for which 5 is a factor is 0 so we have [5, 0] in the result amongst others.
-//
-// In Fortran - as in any other language - the returned string is not permitted to contain any
-// redundant trailing whitespace: you can use dynamically allocated character strings.
+// Note that the example above excludes the punctuation and spaces just for simplicity. There are,
+// however, tests that include punctuation. Don't filter out punctuation as they are a part of the
+// string.
+
+/*
+rail  symbols in `column`
+  0     1
+  1     2
+  2     2
+  3     2
+
+  r-2   2
+  r-1   1
+
+number of symbols in column = 1 + 1 + 2 * (r-2) = 2r - 2
 
 
-fn generate_primes(limit: i64) -> Vec<i64> {
-    match limit {
-        0 | 1 => { return vec![]; },
-        2 => { return vec![2]; },
-        _ => {}
-    };
-    let mut res = vec![2];
-    let mut i = 1;
-    loop {
-        i += 2;
-        if i > limit {
-            break;
-        }
-        let mut flag = true;
-        for prime in res.clone().into_iter() {
-            if i % prime == 0 {
-                flag = false;
-                break;
+1
+ 2 8
+ 3 7
+ 4 6
+  5
+
+11112828282823737373737464646465555
+
+1   5
+ 2 4 6 8
+  3   7
+
+ */
+
+
+
+fn encode_rail_fence_cipher(text: &str, num_rails: usize) -> String {
+    if text.is_empty() {
+        return text.to_owned();
+    }
+    match num_rails {
+        0 | 1 => text.to_owned(),
+        _ => {
+            let mut chunks = vec![];
+            let chunk_len = 2 * num_rails - 2;
+            let mut last = text;
+            while last.len() > chunk_len {
+                let (first, last_) = last.split_at(chunk_len);
+                chunks.push(first.chars().collect::<Vec<char>>());
+                last = last_;
             }
-        }
-        if flag {
-            res.push(i);
+            chunks.push(last.chars().collect());
+            let mut res= String::new();
+            for r in 0..num_rails {
+                for chunk in chunks.iter() {
+                    res.push(chunk.get(r).unwrap_or(&'\0').to_owned());
+                    if r != 0 && r != num_rails - 1 {
+                        res.push(chunk.get(chunk_len - r).unwrap_or(&'\0').to_owned());
+                    }
+                }
+            }
+            res.split('\0').collect::<Vec<&str>>().join("")
         }
     }
-    res
 }
 
-fn sum_of_divided(l: Vec<i64>) -> Vec<(i64, i64)> {
-    let primes = generate_primes(l.iter().map(|e| e.abs()).max().unwrap_or(0).to_owned());
-    let mut res = vec![];
-    for p in primes.iter() {
-        let mut flag = false;
-        let s = l.iter().map(|num| match num % p {
-            0 => {flag = true; num},
-            _ => &0
-        }).sum::<i64>();
-        if s != 0 || flag {
-            res.push((p.to_owned(), s));
+fn decode_rail_fence_cipher(text: &str, num_rails: usize) -> String {
+    if text.is_empty() {
+        return text.to_owned();
+    }
+    match num_rails {
+        0 | 1 => text.to_owned(),
+        _ => {
+            let chunk_len = 2 * num_rails - 2;
+            let (chunk_cnt, last_size) = (text.len() / chunk_len, text.len() % chunk_len);
+            let mut chunks = vec![];
+
+            let mut last = text;
+            while last.len() > chunk_len {
+                let (first, last_) = last.split_at(chunk_len);
+                chunks.push(first.chars().collect::<Vec<char>>());
+                last = last_;
+            }
+            chunks.push(last.chars().collect());
+            println!("{:?}", chunks);
+            "".to_owned()
         }
     }
-    res
 }
 
 fn main() {
-    println!("{:?}", sum_of_divided(vec![-12, -15]));
-    // println!("{:?}", generate_primes(83));
+    println!("{:?}", encode_rail_fence_cipher("WEAREDISCOVEREDFLEEATONCE", 3));
+    println!("{:?}", decode_rail_fence_cipher("WECRLTEERDSOEEFEAOCAIVDEN", 3));
 }
 
-fn testing(l: Vec<i64>, exp: Vec<(i64, i64)>) -> () {
-    assert_eq!(sum_of_divided(l), exp)
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-#[test]
-fn basics_sum_of_divided() {
-
-    testing(vec![12, 15], vec![ (2, 12), (3, 27), (5, 15) ]);
-    testing(vec![15,21,24,30,45], vec![ (2, 54), (3, 135), (5, 90), (7, 21) ]);
-
+    #[test]
+    fn basic_tests() {
+        assert_eq!(encode_rail_fence_cipher("WEAREDISCOVEREDFLEEATONCE", 3), "WECRLTEERDSOEEFEAOCAIVDEN");
+        // assert_eq!(decode_rail_fence_cipher("WECRLTEERDSOEEFEAOCAIVDEN", 3), "WEAREDISCOVEREDFLEEATONCE");
+        assert_eq!(encode_rail_fence_cipher("Hello, World!", 3), "Hoo!el,Wrdl l");
+        // assert_eq!(decode_rail_fence_cipher("Hoo!el,Wrdl l", 3), "Hello, World!");
+        assert_eq!(encode_rail_fence_cipher("12345678", 3), "15246837");
+        assert_eq!(encode_rail_fence_cipher("1234567", 3), "1524637");
+        assert_eq!(encode_rail_fence_cipher("123456", 3), "152463");
+        assert_eq!(encode_rail_fence_cipher("12345", 3), "15243");
+    }
 }
