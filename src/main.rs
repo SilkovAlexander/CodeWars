@@ -1,206 +1,165 @@
-// Write a function that will solve a 9x9 Sudoku puzzle. The function will take one argument
-// consisting of the 2D puzzle array, with the value 0 representing an unknown square.
+// Consider a "word" as any sequence of capital letters A-Z (not limited to just "dictionary
+// words"). For any word with at least two different letters, there are other words composed of the
+// same letters but in a different order (for instance, STATIONARILY/ANTIROYALIST, which happen to
+// both be dictionary words; for our purposes "AAIILNORSTTY" is also a "word" composed of the same
+// letters as these two).
 //
-// The Sudokus tested against your function will be "easy" (i.e. determinable; there will be no need
-// to assume and test possibilities on unknowns) and can be solved with a brute-force approach.
+// We can then assign a number to every word, based on where it falls in an alphabetically sorted
+// list of all words made up of the same group of letters. One way to do this would be to generate
+// the entire list of words and find the desired one, but this would be slow if the word is long.
 //
-// For Sudoku rules, see the Wikipedia article.
+// Given a word, return its number. Your function should be able to accept any word 25 letters or
+// less in length (possibly with some letters repeated), and take no more than 500 milliseconds to
+// run. To compare, when the solution code runs the 27 test cases in JS, it takes 101ms.
+//
+// For very large words, you'll run into number precision issues in JS (if the word's position is
+// greater than 2^53). For the JS tests with large positions, there's some leeway (.000000001%).
+// If you feel like you're getting it right for the smaller ranks, and only failing by rounding on
+// the larger, submit a couple more times and see if it takes.
+//
+// Python, Java and Haskell have arbitrary integer precision, so you must be precise in those
+// languages (unless someone corrects me).
+//
+// C# is using a long, which may not have the best precision, but the tests are locked so we can't
+// change it.
+//
+// Sample words, with their rank:
+// AABB - 1  ABAB - 2
+// ABAB = 2
+// AAAB = 1
+// BAAA = 4
+// QUESTION = 24572
+// BEEEKKOOPR = 1
+// 1222334456
+// BOOKKEEPER = 10743
+// 1443322526
 
-fn print(puzzle: &mut [[u8; 9]; 9]) {
-    for i in 0..9 {
-        println!("{:?}", puzzle[i]);
-    }
-}
+/*
+1234    1223
+1243    1232
+1324    1322
+1342    2123
+1423    2132
+1432    2213
+2134    2231
+2143    2312
+2314    2321  2321
+2341    3122
+2413    3212
+2431    3221
+3124
+3142
+3214
+3241
+3412
+3421
+4123
+4132
+4213
+4231
+4312
+4321
+
+total cnt = n!
+
+22333
+23233
+23323
+23332
+32233
+32323
+32332
+33223
+33232
+33322
+
+ */
+
+use std::collections::{HashMap};
 
 fn main() {
-    let mut puzzle = [
-        [6, 0, 5, 7, 2, 0, 0, 3, 9],
-        [4, 0, 0, 0, 0, 5, 1, 0, 0],
-        [0, 2, 0, 1, 0, 0, 0, 0, 4],
-        [0, 9, 0, 0, 3, 0, 7, 0, 6],
-        [1, 0, 0, 8, 0, 9, 0, 0, 5],
-        [2, 0, 4, 0, 5, 0, 0, 8, 0],
-        [8, 0, 0, 0, 0, 3, 0, 2, 0],
-        [0, 0, 2, 9, 0, 0, 0, 0, 1],
-        [3, 5, 0, 0, 6, 7, 4, 0, 8],
-    ];
-
-    sudoku(&mut puzzle);
-
-    println!("{:?}\n{}", puzzle, valid_solution(&puzzle));
+    println!("{}", get_number_of_permutations(vec![1,2,3,4]));
+    println!("{}", get_number_of_permutations(vec![1,2,3,3]));
+    println!("{}", list_position("BOOKKEEPER"));
 }
 
+fn fact(n: u128) -> u128 {
+    match n {
+        0 | 1 => 1,
+        _ => n * fact(n - 1)
+    }
+}
 
-// Solve the given puzzle in place, no need to return a copy
-fn sudoku(puzzle: &mut [[u8; 9]; 9]) {
-    let mut try_cnt = 20;
-    loop {
-        if try_cnt == 0 {
-            break;
-        }
-        try_cnt -= 1;
+fn get_number_of_permutations(input: Vec<u8>) -> u128 {
+    let mut counts: HashMap<u8, u8> = HashMap::new();
+    for el in input.clone() {
+        *counts.entry(el).or_insert(0) += 1;
+    }
+    let counts: HashMap<&u8, &u8> = counts.iter().filter(|(_, v)| v != &&1_u8).collect();
+    let mut res = fact(input.len() as u128);
+    for (_, v) in counts {
+        res = res / fact(v.to_owned() as u128);
+    }
+    res
+}
 
-        for line in 0..9 {
-            for col in 0..9 {
-                if puzzle[line][col] != 0 {
-                    continue;
-                }
-                let mut possible = vec![1 as u8, 2, 3, 4, 5, 6, 7, 8, 9];
-                let remove = |puzzle: &mut [[u8; 9]; 9], possible: &mut Vec<u8>, i_l, i_c| {
-                    let et: [u8; 9] = puzzle[i_l];
-                    match possible.iter().position(|x| *x == et[i_c]) {
-                        Some(index) => { possible.remove(index); },
-                        None => {}
-                    };
-                };
-                let start = ((line/3) * 3, (col/3) * 3);
-                for i in 0..9 {
-                    if i != line {
-                        remove(puzzle, &mut possible, i, col);
-                    }
-                    if i != col {
-                        remove(puzzle, &mut possible, line, i);
-                    }
-                }
-                for i in 0..3 {
-                    for j in 0..3 {
-                        let coord = (start.0 + i, start.1 + j);
-                        if coord.0 == line && coord.1 == col {
-                            continue;
-                        }
-                        remove(puzzle, &mut possible, coord.0, coord.1);
-                    }
-                }
-
-                if possible.len() == 1 {
-                    puzzle[line][col] = possible[0];
-                }
-            }
-        }
-        if valid_solution(puzzle) {
+fn list_position(word: &str) -> u128 {
+    let mut chars = word.chars().map(|c| c as u8 - 'A' as u8).collect::<Vec<u8>>();
+    let mut sorted = chars.clone();
+    sorted.sort();
+    while chars.len() != 0 {
+        if chars[0] == sorted[0] {
+            chars.remove(0);
+            sorted.remove(0);
+        } else {
             break;
         }
     }
+    let mut res = 1;
+    while chars != sorted && !chars.is_empty() {
+        let cur_char = chars.remove(0);
+        let index = sorted.iter().position(|x| *x == cur_char).unwrap();
+        let mut i = 0;
+        while i < index {
+            let mut sort_clone = sorted.clone();
+            let prev = sort_clone.remove(i);
+            res += get_number_of_permutations(sort_clone.clone()) as u128;
+            while sort_clone[i] == prev {
+                i += 1;
+            }
+            i += 1;
+        }
+        sorted.remove(index);
+    }
+    res
 }
 
 // Add your tests here.
 // See https://doc.rust-lang.org/stable/rust-by-example/testing/unit_testing.html
 
 #[cfg(test)]
-mod sample_tests {
-    use super::sudoku;
+mod tests {
+    use super::list_position;
+
+    const ERR_MSG: &str = "\nYour result (left) did not match the expected output (right)";
 
     #[test]
-    fn puzzle_1() {
-        let mut puzzle = [
-            [6, 0, 5, 7, 2, 0, 0, 3, 9],
-            [4, 0, 0, 0, 0, 5, 1, 0, 0],
-            [0, 2, 0, 1, 0, 0, 0, 0, 4],
-            [0, 9, 0, 0, 3, 0, 7, 0, 6],
-            [1, 0, 0, 8, 0, 9, 0, 0, 5],
-            [2, 0, 4, 0, 5, 0, 0, 8, 0],
-            [8, 0, 0, 0, 0, 3, 0, 2, 0],
-            [0, 0, 2, 9, 0, 0, 0, 0, 1],
-            [3, 5, 0, 0, 6, 7, 4, 0, 8],
+    fn sample_tests() {
+        let test_data = [
+            (                  "A", 1),
+            (               "ABAB", 2),
+            (               "AAAB", 1),
+            (               "BAAA", 4),
+            (               "YMYM", 5),
+            (           "QUESTION", 24572),
+            (         "BOOKKEEPER", 10743),
+            ("IMMUNOELECTROPHORETICALLY", 718393983731145698173),
         ];
-        let solution = [
-            [6, 1, 5, 7, 2, 4, 8, 3, 9],
-            [4, 8, 7, 3, 9, 5, 1, 6, 2],
-            [9, 2, 3, 1, 8, 6, 5, 7, 4],
-            [5, 9, 8, 4, 3, 2, 7, 1, 6],
-            [1, 3, 6, 8, 7, 9, 2, 4, 5],
-            [2, 7, 4, 6, 5, 1, 9, 8, 3],
-            [8, 4, 9, 5, 1, 3, 6, 2, 7],
-            [7, 6, 2, 9, 4, 8, 3, 5, 1],
-            [3, 5, 1, 2, 6, 7, 4, 9, 8],
-        ];
-
-        sudoku(&mut puzzle);
-        assert_eq!(puzzle, solution, "\nYour solution (left) did not match the correct solution (right)");
-    }
-
-    #[test]
-    fn puzzle_2() {
-        let mut puzzle = [
-            [0, 0, 8, 0, 3, 0, 5, 4, 0],
-            [3, 0, 0, 4, 0, 7, 9, 0, 0],
-            [4, 1, 0, 0, 0, 8, 0, 0, 2],
-            [0, 4, 3, 5, 0, 2, 0, 6, 0],
-            [5, 0, 0, 0, 0, 0, 0, 0, 8],
-            [0, 6, 0, 3, 0, 9, 4, 1, 0],
-            [1, 0, 0, 8, 0, 0, 0, 2, 7],
-            [0, 0, 5, 6, 0, 3, 0, 0, 4],
-            [0, 2, 9, 0, 7, 0, 8, 0, 0],
-        ];
-        let solution = [
-            [9, 7, 8, 2, 3, 1, 5, 4, 6],
-            [3, 5, 2, 4, 6, 7, 9, 8, 1],
-            [4, 1, 6, 9, 5, 8, 3, 7, 2],
-            [8, 4, 3, 5, 1, 2, 7, 6, 9],
-            [5, 9, 1, 7, 4, 6, 2, 3, 8],
-            [2, 6, 7, 3, 8, 9, 4, 1, 5],
-            [1, 3, 4, 8, 9, 5, 6, 2, 7],
-            [7, 8, 5, 6, 2, 3, 1, 9, 4],
-            [6, 2, 9, 1, 7, 4, 8, 5, 3],
-        ];
-
-        sudoku(&mut puzzle);
-        assert_eq!(puzzle, solution, "\nYour solution (left) did not match the correct solution (right)");
-    }
-}
-
-static STANDARD: [u8; 9] = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-
-fn valid_solution(sudoku: &[[u8;9]; 9]) -> bool {
-    fn check_array(mut arr: Vec<u8>) -> bool {
-        arr.sort();
-        arr == STANDARD
-    }
-    for i in 0..9 {
-        if !check_array(sudoku[i].to_vec()) {
-            return false;
+        for (word, expected) in test_data {
+            assert_eq!(list_position(word),
+                       expected,
+                       "\nYour result (left) did not match the expected output (right) for the input: \"{word}\"");
         }
-        if !check_array(sudoku.clone().map(|line| line[i]).to_vec()) {
-            return false;
-        }
-        let line = (i / 3) as usize;
-        let col = i % 3;
-        let mut square = vec![];
-        for m in 0..3 {
-            for n in 0..3 {
-                square.push(sudoku[line * 3 + m][col * 3 + n]);
-            }
-        }
-        if !check_array(square) {
-            return false;
-        }
-    }
-    true
-}
 
-
-use std::{collections::HashSet, iter::FromIterator};
-
-fn sudoku_1(puzzle: &mut [[u8; 9]; 9]) {
-    let s: HashSet<u8> = HashSet::from_iter(1..=9);
-    for r in 0..9 {
-        for c in 0..9 {
-            if puzzle[r][c] == 0 {
-                let br = r / 3 * 3;
-                let bc = c / 3 * 3;
-                let block: HashSet<u8> = HashSet::from_iter(
-                    (0..3_usize)
-                        .flat_map(|row| (0..3_usize).map(move |col| (row, col)))
-                        .map(|(r, c)| puzzle[br + r][bc + c]),
-                );
-                let row = HashSet::from(puzzle[r]);
-                let col = HashSet::from_iter(puzzle.iter().map(|row| row[c]));
-                let x = &s - &(&(&row | &col) | &block);
-                if x.len() == 1 {
-                    puzzle[r][c] = *x.iter().next().unwrap() as u8;
-                    sudoku(puzzle)
-                }
-            }
-        }
     }
 }
