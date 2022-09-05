@@ -1,165 +1,83 @@
-// Consider a "word" as any sequence of capital letters A-Z (not limited to just "dictionary
-// words"). For any word with at least two different letters, there are other words composed of the
-// same letters but in a different order (for instance, STATIONARILY/ANTIROYALIST, which happen to
-// both be dictionary words; for our purposes "AAIILNORSTTY" is also a "word" composed of the same
-// letters as these two).
-//
-// We can then assign a number to every word, based on where it falls in an alphabetically sorted
-// list of all words made up of the same group of letters. One way to do this would be to generate
-// the entire list of words and find the desired one, but this would be slow if the word is long.
-//
-// Given a word, return its number. Your function should be able to accept any word 25 letters or
-// less in length (possibly with some letters repeated), and take no more than 500 milliseconds to
-// run. To compare, when the solution code runs the 27 test cases in JS, it takes 101ms.
-//
-// For very large words, you'll run into number precision issues in JS (if the word's position is
-// greater than 2^53). For the JS tests with large positions, there's some leeway (.000000001%).
-// If you feel like you're getting it right for the smaller ranks, and only failing by rounding on
-// the larger, submit a couple more times and see if it takes.
-//
-// Python, Java and Haskell have arbitrary integer precision, so you must be precise in those
-// languages (unless someone corrects me).
-//
-// C# is using a long, which may not have the best precision, but the tests are locked so we can't
-// change it.
-//
-// Sample words, with their rank:
-// AABB - 1  ABAB - 2
-// ABAB = 2
-// AAAB = 1
-// BAAA = 4
-// QUESTION = 24572
-// BEEEKKOOPR = 1
-// 1222334456
-// BOOKKEEPER = 10743
-// 1443322526
-
 /*
-1234    1223
-1243    1232
-1324    1322
-1342    2123
-1423    2132
-1432    2213
-2134    2231
-2143    2312
-2314    2321  2321
-2341    3122
-2413    3212
-2431    3221
-3124
-3142
-3214
-3241
-3412
-3421
-4123
-4132
-4213
-4231
-4312
-4321
+For a given list [x1, x2, x3, ..., xn] compute the last (decimal) digit of
+x1 ^ (x2 ^ (x3 ^ (... ^ xn))).
 
-total cnt = n!
+E. g., with the input [3, 4, 2], your code should return 1 because 3 ^ (4 ^ 2) = 3 ^ 16 = 43046721.
 
-22333
-23233
-23323
-23332
-32233
-32323
-32332
-33223
-33232
-33322
+Beware: powers grow incredibly fast. For example, 9 ^ (9 ^ 9) has more than 369 millions of digits.
+lastDigit has to deal with such numbers efficiently.
 
- */
+Corner cases: we assume that 0 ^ 0 = 1 and that lastDigit of an empty list equals to 1.
 
-use std::collections::{HashMap};
+0 - 0
+1 - 1
+2 - 2 4 8 6
+3 - 3 9 7 1
+4 - 4 6
+5 - 5
+6 - 6
+7 - 7 9 3 1
+8 - 8 4 2 6
+9 - 9 1
+
+Due to the previous table we need to know only the Power % 4.
+
+*/
 
 fn main() {
-    println!("{}", get_number_of_permutations(vec![1,2,3,4]));
-    println!("{}", get_number_of_permutations(vec![1,2,3,3]));
-    println!("{}", list_position("BOOKKEEPER"));
+    println!("{} 6", last_digit(&vec![2, 2, 101, 2]));
+    println!("{} 1", last_digit(&vec![3, 4, 5]));
+    println!("{} 4", last_digit(&vec![4, 3, 6]));
+    println!("{} 1", last_digit(&vec![7, 6, 21]));
+
 }
 
-fn fact(n: u128) -> u128 {
-    match n {
-        0 | 1 => 1,
-        _ => n * fact(n - 1)
+fn last_digit(list: &[u64]) -> u64 {
+    if list.is_empty() {
+        return 0;
     }
-}
+    if list.len() == 1 {
+        return list[0];
+    }
+    let mut pow = match list.last().unwrap() % 4 {
+        0 => 4,
+        val => val
+    };
+    for i in (0..list.len()-1).rev() {
+        pow = list[i].pow(pow as u32) % (if i != 0 { 4 } else {10});
+    }
+    pow
 
-fn get_number_of_permutations(input: Vec<u8>) -> u128 {
-    let mut counts: HashMap<u8, u8> = HashMap::new();
-    for el in input.clone() {
-        *counts.entry(el).or_insert(0) += 1;
-    }
-    let counts: HashMap<&u8, &u8> = counts.iter().filter(|(_, v)| v != &&1_u8).collect();
-    let mut res = fact(input.len() as u128);
-    for (_, v) in counts {
-        res = res / fact(v.to_owned() as u128);
-    }
-    res
 }
-
-fn list_position(word: &str) -> u128 {
-    let mut chars = word.chars().map(|c| c as u8 - 'A' as u8).collect::<Vec<u8>>();
-    let mut sorted = chars.clone();
-    sorted.sort();
-    while chars.len() != 0 {
-        if chars[0] == sorted[0] {
-            chars.remove(0);
-            sorted.remove(0);
-        } else {
-            break;
-        }
-    }
-    let mut res = 1;
-    while chars != sorted && !chars.is_empty() {
-        let cur_char = chars.remove(0);
-        let index = sorted.iter().position(|x| *x == cur_char).unwrap();
-        let mut i = 0;
-        while i < index {
-            let mut sort_clone = sorted.clone();
-            let prev = sort_clone.remove(i);
-            res += get_number_of_permutations(sort_clone.clone()) as u128;
-            while sort_clone[i] == prev {
-                i += 1;
-            }
-            i += 1;
-        }
-        sorted.remove(index);
-    }
-    res
-}
-
-// Add your tests here.
-// See https://doc.rust-lang.org/stable/rust-by-example/testing/unit_testing.html
 
 #[cfg(test)]
 mod tests {
-    use super::list_position;
+    use super::last_digit;
 
     const ERR_MSG: &str = "\nYour result (left) did not match the expected output (right)";
 
-    #[test]
-    fn sample_tests() {
-        let test_data = [
-            (                  "A", 1),
-            (               "ABAB", 2),
-            (               "AAAB", 1),
-            (               "BAAA", 4),
-            (               "YMYM", 5),
-            (           "QUESTION", 24572),
-            (         "BOOKKEEPER", 10743),
-            ("IMMUNOELECTROPHORETICALLY", 718393983731145698173),
-        ];
-        for (word, expected) in test_data {
-            assert_eq!(list_position(word),
-                       expected,
-                       "\nYour result (left) did not match the expected output (right) for the input: \"{word}\"");
-        }
+    fn dotest(v: &[u64], expected: u64) {
+        assert_eq!(last_digit(v), expected, "{ERR_MSG} with list = {v:?}")
+    }
 
+    #[test]
+    fn fixed_tests() {
+        for (a, b) in  [
+            (vec![], 1),
+            (vec![0, 0], 1),
+            (vec![0, 0, 0], 0),
+            (vec![1, 2], 1),
+            (vec![3, 4, 5], 1),
+            (vec![4, 3, 6], 4),
+            (vec![7, 6, 21], 1),
+            (vec![12, 30, 21], 6),
+            (vec![2, 2, 2, 0], 4),
+            (vec![2, 2, 101, 2], 6),
+            (vec![937640, 767456, 981242], 0),
+            (vec![123232, 694022, 140249], 6),
+            (vec![499942, 898102, 846073], 6)
+        ]  {
+            dotest(&a, b);
+        }
     }
 }
